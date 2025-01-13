@@ -13,7 +13,7 @@ def create_images_with_text(
 ) -> None:
     """
     Generates two images for each record in the cleaned data using specified columns
-    and saves them in a folder named after another column.
+    and saves them in a folder named after another column or a fallback.
 
     Parameters:
     ----------
@@ -41,7 +41,6 @@ def create_images_with_text(
         """Logs messages to the log_callback."""
         log_callback(message)
 
-    # Load the sample image
     try:
         sample_image = Image.open(sample_image_path)
     except Exception as e:
@@ -51,31 +50,28 @@ def create_images_with_text(
     if sample_image.mode != "RGB":
         sample_image = sample_image.convert("RGB")
 
-    # Set the base font size
     base_font_size = 40
 
-    # Skip the first row and limit rows if specified
     data_to_process = data.iloc[1:].head(row_limit) if row_limit > 0 else data.iloc[1:]
     log(f"Processing {len(data_to_process)} records for image generation (excluding the first row).")
 
     for i, row in data_to_process.iterrows():
         # Extract folder name and image texts
-        folder_name = str(row.get("Column_5", "")).strip()
-        text_1 = str(row.get("Column_3", "")).strip()
-        text_2 = str(row.get("Column_6", "")).strip()
-
-        # Skip rows only if any of these critical fields are missing
+        folder_name = str(row.get("Column_3", "")).strip()
+        text_1 = str(row.get("Column_6", "")).strip()
+        text_2 = str(row.get("Column_9", "")).strip()
         if not folder_name:
-            log(f"Skipping Record {i + 1}: Missing folder name (column_2).")
-            continue
+            fallback_name = "_".join(
+                str(row.get(col, "")).strip() for col in ["Column_8", "Column_4"] if str(row.get(col, "")).strip()
+            )
+            folder_name = fallback_name if fallback_name else None
 
-        if not text_1 and not text_2:
-            log(f"Skipping Record {i + 1}: Both text fields (column_3 and column_5) are empty.")
+        if not folder_name:
+            log(f"Skipping Record {i + 1}: No valid folder name available.")
             continue
 
         log(f"Record {i + 1}: Creating folder '{folder_name}' and generating images.")
 
-        # Create the folder for the domain
         folder_path = os.path.join(output_dir, folder_name)
         os.makedirs(folder_path, exist_ok=True)
 
@@ -93,8 +89,6 @@ def create_images_with_text(
                 bbox = draw.textbbox((0, 0), text, font=font)
                 text_width, text_height = bbox[2] - bbox[0], bbox[3] - bbox[1]
             return font
-
-        # Generate the first image if text_1 is not empty
         if text_1:
             img = sample_image.copy()
             draw = ImageDraw.Draw(img)
@@ -107,7 +101,6 @@ def create_images_with_text(
             img.save(os.path.join(folder_path, f"image_column_3_{i}.png"))
             log(f"Saved image from 'column_3' for Record {i + 1} in {folder_path}.")
 
-        # Generate the second image if text_2 is not empty
         if text_2:
             img = sample_image.copy()
             draw = ImageDraw.Draw(img)

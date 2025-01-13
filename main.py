@@ -1,4 +1,3 @@
-
 from src.preprocess import clean_data_with_logging
 from src.edit_image import create_images_with_text
 
@@ -10,42 +9,31 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 
 
-
 class CompoundApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Data Cleaner & Image Generator")
         self.root.geometry("800x600")
-
-
-
-        # Variables to store paths and limits
         self.file_path = None
         self.sample_image_path = None
         self.df = None
-        self.row_limit = tk.IntVar(value=0)  # Default to 0, meaning no limit
-
-        # Create the layout
+        self.row_limit = tk.IntVar(value=0)
         self.create_widgets()
 
     def create_widgets(self):
         # Frame for File Actions
         file_frame = ttk.LabelFrame(self.root, text="File Actions", padding=10)
         file_frame.pack(fill="x", padx=10, pady=5)
-
         self.load_button = ttk.Button(file_frame, text="Load File", command=self.load_file)
         self.load_button.grid(row=0, column=0, padx=10, pady=5)
-
         self.sample_image_button = ttk.Button(file_frame, text="Upload Sample Image", command=self.upload_sample_image)
         self.sample_image_button.grid(row=0, column=1, padx=10, pady=5)
-
         self.clean_button = ttk.Button(file_frame, text="Clean Data", command=self.clean_data, state=tk.DISABLED)
         self.clean_button.grid(row=0, column=2, padx=10, pady=5)
-
-        self.generate_button = ttk.Button(file_frame, text="Generate Images", command=self.generate_images, state=tk.DISABLED)
+        self.generate_button = ttk.Button(file_frame, text="Generate Images", command=self.generate_images,
+                                          state=tk.DISABLED)
         self.generate_button.grid(row=0, column=3, padx=10, pady=5)
 
-        # Row Limit Input
         ttk.Label(file_frame, text="Rows for Image Editing:").grid(row=1, column=0, sticky="w", padx=10)
         self.row_limit_entry = ttk.Entry(file_frame, textvariable=self.row_limit, width=10)
         self.row_limit_entry.grid(row=1, column=1, sticky="w", padx=10)
@@ -130,7 +118,6 @@ class CompoundApp:
         except Exception as e:
             messagebox.showerror("Error", str(e))
             self.log_message(f"Error during image generation: {e}")
-
 
 if __name__ == "__main__":
     root = tk.Tk()
