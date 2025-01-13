@@ -5,15 +5,15 @@ from typing import Callable
 
 
 def create_images_with_text(
-        data: pd.DataFrame,
-        sample_image_path: str,
-        output_dir: str,
-        row_limit: int = 0,
-        log_callback: Callable[[str], None] = print
+    data: pd.DataFrame,
+    sample_image_path: str,
+    output_dir: str,
+    row_limit: int = 0,
+    log_callback: Callable[[str], None] = print
 ) -> None:
     """
     Generates two images for each record in the cleaned data using specified columns
-    and saves them in a folder named after another column.
+    and saves them in a folder named after another column or a fallback.
 
     Parameters:
     ----------
@@ -36,7 +36,6 @@ def create_images_with_text(
     -------
     None
     """
-
     def log(message: str):
         """Logs messages to the log_callback."""
         log_callback(message)
@@ -60,17 +59,20 @@ def create_images_with_text(
 
     for i, row in data_to_process.iterrows():
         # Extract folder name and image texts
-        folder_name = str(row.get("Column_5", "")).strip()
-        text_1 = str(row.get("Column_3", "")).strip()
-        text_2 = str(row.get("Column_6", "")).strip()
+        folder_name = str(row.get("Column_3", "")).strip()
+        text_1 = str(row.get("Column_6", "")).strip()
+        text_2 = str(row.get("Column_9", "")).strip()
 
-        # Skip rows only if any of these critical fields are missing
+        # If folder_name is missing, use fallback columns to create a unique folder name
         if not folder_name:
-            log(f"Skipping Record {i + 1}: Missing folder name (column_2).")
-            continue
+            fallback_name = "_".join(
+                str(row.get(col, "")).strip() for col in ["Column_8", "Column_4"] if str(row.get(col, "")).strip()
+            )
+            folder_name = fallback_name if fallback_name else None
 
-        if not text_1 and not text_2:
-            log(f"Skipping Record {i + 1}: Both text fields (column_3 and column_5) are empty.")
+        # Skip rows if no valid folder name can be generated
+        if not folder_name:
+            log(f"Skipping Record {i + 1}: No valid folder name available.")
             continue
 
         log(f"Record {i + 1}: Creating folder '{folder_name}' and generating images.")
